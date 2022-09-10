@@ -1,9 +1,9 @@
 import { Content } from 'antd/lib/layout/layout';
-import { useContext } from 'react';
+import { FC, useContext } from 'react';
 import { Context } from '../../App';
 import { AppContext } from '../../shared/utils';
 
-export const UserInfo = (): JSX.Element => {
+export const UserInfo: FC = (): JSX.Element => {
     const { value }: AppContext = useContext(Context);
 
     const { selectOption, firstName, lastName, pickedDate } = value;

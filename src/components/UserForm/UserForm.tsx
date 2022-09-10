@@ -1,77 +1,33 @@
-// @ts-nocheck
-import { BirthDate } from '../../components/Inputs/BirthDate';
-import { FormInput } from '../../components/Inputs/FormInput';
-import { SelectOptions } from '../../components/Inputs/SelectOptions';
-import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
+import { BirthDate } from '../../components/inputs/BirthDate';
+import { TextInput } from '../../components/inputs/TextInput';
+import { SelectOptions } from '../../components/inputs/SelectOptions';
+import { SubmitHandler, useForm, FormProvider, useWatch } from 'react-hook-form';
 import { Col, Form, Row } from 'antd';
-import Button from 'antd-button-color';
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext } from 'react';
 import moment from 'moment';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { ButtonTypes, ErrorMessages, IUserForm } from '../../shared/utils';
+import { IUserForm, LocalLabels, PICKED_DATE } from '../../shared/utils';
 import { Context } from '../../App';
 import { Content } from 'antd/lib/layout/layout';
+import { useDisable } from '../../shared/hooks';
+import { useSetButtonVariant } from '../../shared/hooks/useSetButtonVariant';
+import { SaveButton } from './styled';
 
-const schema = yup.object().shape({
-    lastName: yup.string().required('To pole jest wymagane'),
-    selectOption: yup.mixed().when(['lastName'], (lastName: any, schema: any, node: any) => {
-        if (lastName.length < 5 && node.value === 'C')
-            return yup.string().notOneOf(['C'], ErrorMessages.CRITERIUM_NOT_MET);
-    }),
-});
-
-export const useEnabled = (initialState = false) => {
-    const [state, setState] = use.State(initialState);
-    const handleEnable = () => setState(false);
-    const handleDisable = () => setState(true);
-    const handleToggle = () => setState(!state);
-
-    return [
-        state,
-        {
-            setTrue: handleDisable,
-            setFalse: handleEnable,
-            setToggle: handleToggle,
-        },
-    ];
-};
-
-export const UserForm: FC = (): JSX.Element => {
+export const UserForm: FC = () => {
     const { setValue } = useContext(Context);
+    const methods = useForm<IUserForm>();
+    const { handleSubmit, control } = methods;
+    const pickedDate = useWatch({
+        control,
+        name: PICKED_DATE,
+    });
 
-    // const [enabled, { handleEnable, handleDisable }] = useEnabled(false);
-    const [isDisabled, setIsDisabled] = useState<boolean>(false);
-    const [buttonType, setButtonType] = useState<ButtonTypes>(ButtonTypes.PRIMARY);
+    const isDisabled = useDisable(pickedDate);
+    const buttonVariant = useSetButtonVariant(pickedDate);
 
-    const methods = useForm<IUserForm>({ resolver: yupResolver(schema) });
-
-    const formS: IUserForm = methods.getValues();
-    const { pickedDate } = methods.watch(formS, false);
-
-    useEffect(() => {
-        const currentDate: string = moment()._d;
-        if (moment(pickedDate?._d).isBefore(currentDate) || !pickedDate?._d) setIsDisabled(false);
-        else setIsDisabled(true);
-    }, [pickedDate]);
-
-    useEffect(() => {
-        if (moment(pickedDate?._d).isBefore('1900/01/01') || !pickedDate?._d)
-            setButtonType(ButtonTypes.SUCCESS);
-        else setButtonType(ButtonTypes.PRIMARY);
-    }, [pickedDate]);
-
-    const onSubmit: SubmitHandler<IUserForm> = ({
-        firstName,
-        lastName,
-        selectOption,
-        pickedDate,
-    }: IUserForm) => {
+    const onSubmit: SubmitHandler<IUserForm> = (props: IUserForm) => {
         setValue({
-            firstName,
-            lastName,
-            selectOption: selectOption.value,
-            pickedDate: moment(pickedDate?._d).format('YYYY/MM/DD'),
+            ...props,
+            pickedDate: moment(pickedDate).format('YYYY/MM/DD'),
         });
         alert('SUKCES');
     };
@@ -79,7 +35,7 @@ export const UserForm: FC = (): JSX.Element => {
         <Content style={{ padding: '50px' }}>
             <FormProvider {...methods}>
                 <Form
-                    onFinish={methods.handleSubmit(onSubmit)}
+                    onFinish={handleSubmit(onSubmit)}
                     labelCol={{ span: 8 }}
                     wrapperCol={{ span: 14 }}
                     layout="horizontal"
@@ -91,7 +47,7 @@ export const UserForm: FC = (): JSX.Element => {
                     </Row>
                     <Row>
                         <Col span={6}>
-                            <FormInput />
+                            <TextInput />
                         </Col>
                     </Row>
                     <Row>
@@ -101,14 +57,14 @@ export const UserForm: FC = (): JSX.Element => {
                     </Row>
                     <Row>
                         <Col span={6} offset={2}>
-                            <Button
-                                type={buttonType}
+                            <SaveButton
+                                className={buttonVariant}
+                                type="primary"
                                 htmlType="submit"
                                 disabled={isDisabled}
-                                style={{ width: '50%' }}
                             >
-                                Save
-                            </Button>
+                                {LocalLabels.SAVE}
+                            </SaveButton>
                         </Col>
                     </Row>
                 </Form>

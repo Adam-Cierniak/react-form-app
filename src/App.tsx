@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import { Header } from './shared/components/Header';
 import Routes from './Routes';
 import { AppContext, IUserForm } from './shared/utils';
@@ -8,7 +8,7 @@ export const Context = React.createContext<AppContext>({
     setValue: () => {},
 });
 
-const App = () => {
+const App: FC = (): JSX.Element => {
     const [value, setValue] = useState<IUserForm>({
         firstName: '-',
         lastName: '-',
